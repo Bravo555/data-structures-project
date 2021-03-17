@@ -2,29 +2,45 @@
 
 struct linked_list_node {
     int value;
-    std::unique_ptr<linked_list_node> next;
+    std::shared_ptr<linked_list_node> next;
+    std::shared_ptr<linked_list_node> prev;
 
     linked_list_node(int value) : value(value) {}
 };
 
 struct linked_list {
-    std::unique_ptr<linked_list_node> head;
+    std::shared_ptr<linked_list_node> head;
+    std::shared_ptr<linked_list_node> tail;
 
     linked_list() {
         head = nullptr;
+        tail = nullptr;
     }
 
-    void append(int val) {
-        if(head == nullptr) {
-            head.reset(new linked_list_node(val));
+    void push_back(int val) {
+        if(tail == nullptr) {
+            head = std::make_shared<linked_list_node>(val);
+            tail = head;
             return;
         }
 
-        auto curr = head.get();
-        while(curr->next != nullptr) {
-            curr = curr->next.get();
+        auto newnode = std::make_shared<linked_list_node>(val);
+        newnode->prev = tail;
+        tail->next = newnode;
+        tail = newnode;
+    }
+
+    void push_front(int val) {
+        if(head == nullptr) {
+            head = std::make_shared<linked_list_node>(val);
+            tail = head;
+            return;
         }
-        curr->next.reset(new linked_list_node(val));
+
+        auto newnode = std::make_shared<linked_list_node>(val);
+        newnode->next = head;
+        head->prev = newnode;
+        head = newnode;
     }
 };
 
