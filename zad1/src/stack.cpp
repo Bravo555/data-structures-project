@@ -17,7 +17,6 @@ struct stack {
     }
 
     void push(int val) {
-        std::cout << "pushing!" << std::endl;
         auto *new_frame = new stack_frame(val);
         new_frame->next.reset(top.release());
         top.reset(new_frame);
@@ -25,7 +24,6 @@ struct stack {
     }
 
     int pop() {
-        std::cout << "popping!" << std::endl;
         auto frame = top.release();
         top.reset(frame->next.release());
         return frame->value;
