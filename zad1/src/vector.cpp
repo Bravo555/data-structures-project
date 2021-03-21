@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <cstring>
 
 class vector
 {
@@ -23,6 +24,19 @@ public:
         len = 0;
         capacity = 10;
         ptr = new int[capacity];
+    }
+
+    vector(const vector& other) : len(other.len), capacity(other.capacity) {
+        ptr = new int[capacity];
+        std::memcpy(ptr, other.ptr, len);
+    }
+
+    ~vector() {
+        delete[] ptr;
+    }
+
+    int& operator[](size_t pos) {
+        return ptr[pos];
     }
 
     size_t length() {

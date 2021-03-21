@@ -4,9 +4,33 @@
 
 Potrzebne dane były generowane na miejscu za pomocą `std::mt19937`.
 
-Sprzęt:
+Platforma testowa:
 
 -   CPU: Ryzen 5 3600 3.6GHz
+-   OS: Linux 5.11.6-1-MANJARO
+-   libc: 2.33
+-   Opcje kompilatora: `g++ src/main.cpp -Wall -Wextra -O`
+
+## Potencjalne źródła błędów
+
+### Implementacja malloc w libc
+
+Funkcja `malloc` nie rezerwuje od razu całej pamięci o jaką ją poprosimy, tylko aby zaoszczędzić pamięć rezerwuje
+kolejne bloki w momencie gdy chcemy użyć pamięci zwróconej przez `malloc`, np. wpisując do niej wartość. Skutkuje to
+tym, że podczas wypełniania tablicy, dla jej dużych rozmiarów, mogą być wykonywane kolejne alokacje, zwiększając w ten
+sposób czas wykonania.
+
+```
+Tu pokazać jakiś przykład z ltrace lub strace
+```
+
+### Implementacja memcpy
+
+W konstruktorze kopiującym m.in. wektora używana jest funkcja `memcpy` aby zminimalizować czas kopiowania elementów.
+Analiza pamięci fizycznej wykazała że kopia wektora o wielkości 1GiB nie zużywa pamięci. Możliwe że mamy do czynienia z
+mechanizmem copy-on-write.
+
+TODO: zbadac
 
 ## Opis badanych operacji
 
@@ -86,7 +110,16 @@ złożnoność O(n), ponieważ wymaga trawersji listy.
 
 ### Stos
 
+Stos to struktura danych zapewniająca operacje push i pop, które odpowiednio dodają nowy element, oraz usuwają element z
+wierzchołka stosu. Elementy wrzucone na stos jako ostatnie, są jako pierwsze usuwane przez operację pop (Last In First
+Out, LIFO). Definicja wymaga tylko powyższych dwóch operacji i ich poprawnego działania, określa zatem tylko interfejs,
+stos można zaimplementować używając tablicy lub listy.
+
 #### Tworzenie
+
+Jak w wypadku powyższych struktur, tworzymy pusty stos, a następnie dodajemy do niego elementy za pomocą funkcji
+`push()`. W tym celu inicjalizujemy podległą strukturę (tablicę lub listę) a następnie używamy właściwych im funkcji do
+dodawania elementów.
 
 #### Wstawianie
 
@@ -97,6 +130,10 @@ złożnoność O(n), ponieważ wymaga trawersji listy.
 #### Usuwanie
 
 ### Kolejka
+
+Podobnie jak stos, to struktura zapewniająca interfejs do zapisywania i odczytywania danych. W przeciwieństwie do stosu,
+zapewnia kolejność First In First Out, FIFO, czyli elementy dodane do listy jako pierwsze, jako pierwsze są z niej
+usuwane. Podobnie może zostać zaimplementowana za pomocą listy lub tablicy.
 
 #### Tworzenie
 
