@@ -2,7 +2,8 @@
 
 ## Metodyka testowa
 
-Potrzebne dane były generowane na miejscu za pomocą `std::mt19937`.
+Potrzebne dane były generowane na miejscu za pomocą `std::mt19937` zaseedowanego stałą wartością, aby zapewnić
+niezmienność danych pomiędzy uruchomieniami.
 
 Platforma testowa:
 
@@ -31,6 +32,20 @@ Analiza pamięci fizycznej wykazała że kopia wektora o wielkości 1GiB nie zu�
 mechanizmem copy-on-write.
 
 TODO: zbadac
+
+### Dynamic dispatch
+
+Ponieważ używamy polimorfizmu aby nie pisać każdego przypadku testowego osobno dla każdej struktury danych, wywołanie
+metody związanej z daną operacją wykorzystuje Vtable i wymagają wykonania skoku. Może to zwiększać czas wywołania dla
+każdej iteracji o stałą wartość.
+
+Możliwe rozwiązanie: wrzucić kod benchmarkujący do klasy, żeby wykonać dynamic dispatch tylko raz (przy wywołaniu metody
+benchmark) a następnie zostać w obrębie klasy.
+
+## Wymagania przypadków testowych
+
+-   niezmienność
+-   porównywalność
 
 ## Opis badanych operacji
 
