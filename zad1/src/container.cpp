@@ -9,6 +9,9 @@
 class Container {
 
     public:
+
+    virtual ~Container() {};
+
     void fill(size_t n) {
         for(size_t i = 0; i < n; ++i) {
             append(i);
@@ -25,6 +28,9 @@ class Array: public Container {
     vector v;
 
 public:
+    ~Array() {
+    }
+
     void append(int val) {
         v.push(val);
     }
@@ -38,7 +44,6 @@ public:
     }
 
     void remove(size_t idx) {
-        std::cout << "now deleting: " << idx << std::endl;
         v.remove(idx);
     }
 };
@@ -47,6 +52,8 @@ class List: public Container {
     std::list<int> list;
 
 public:
+    ~List() {
+    }
     void append(int val) {
         list.push_back(val);
     }
@@ -73,6 +80,8 @@ class Stack: public Container {
     std::stack<int> stack;
 
 public:
+    ~Stack() {
+    }
     void append(int val) {
         stack.push(val);
     }
@@ -127,6 +136,8 @@ class Queue: public Container {
     std::queue<int> queue;
 
 public:
+    ~Queue() {
+    }
     void append(int val) {
         queue.push(val);
     }
@@ -176,6 +187,7 @@ public:
             temp.push(queue.front());
             queue.pop();
         }
+
         queue.swap(temp);
     }
 };

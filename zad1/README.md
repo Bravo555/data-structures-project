@@ -10,6 +10,7 @@ Platforma testowa:
 -   CPU: Ryzen 5 3600 3.6GHz
 -   OS: Linux 5.11.6-1-MANJARO
 -   libc: 2.33
+-   g++: 10.2.0
 -   Opcje kompilatora: `g++ src/main.cpp -Wall -Wextra -O`
 
 ## Potencjalne źródła błędów
@@ -21,17 +22,11 @@ kolejne bloki w momencie gdy chcemy użyć pamięci zwróconej przez `malloc`, n
 tym, że podczas wypełniania tablicy, dla jej dużych rozmiarów, mogą być wykonywane kolejne alokacje, zwiększając w ten
 sposób czas wykonania.
 
-```
-Tu pokazać jakiś przykład z ltrace lub strace
-```
-
 ### Implementacja memcpy
 
 W konstruktorze kopiującym m.in. wektora używana jest funkcja `memcpy` aby zminimalizować czas kopiowania elementów.
 Analiza pamięci fizycznej wykazała że kopia wektora o wielkości 1GiB nie zużywa pamięci. Możliwe że mamy do czynienia z
 mechanizmem copy-on-write.
-
-TODO: zbadac
 
 ### Dynamic dispatch
 
@@ -44,8 +39,10 @@ benchmark) a następnie zostać w obrębie klasy.
 
 ## Wymagania przypadków testowych
 
--   niezmienność
--   porównywalność
+-   niezmienność (generowanie takich samych liczb pomiędzy wywoływaniami programu, aby program pracował na tych samych
+    danych)
+-   porównywalność (takie dobranie parametrów aby operacja, np. wstawiania, była bezpośrednio porównywalna między dwoma
+    strukturami)
 
 ## Opis badanych operacji
 
@@ -138,11 +135,25 @@ dodawania elementów.
 
 #### Wstawianie
 
+Aby wstawić element na `n`tą pozycję stosu, musimy najpierw ściągnąć `n` górnych elementów, włożyć wstawiany element, a
+następnie włożyć ściągnięte elementy w kolejności odwrotnej niż uzyskana (Last In First Out). Może nam do tego posłużyć
+kolejny stos.
+
 #### Dodawanie
+
+Dodanie elementu do stosu jest tożsame z wstawieniem elementu na jego 0 pozycję. Nie musimy wyciągać żadnych elementów.
+Złożoność operacji wynosi O(1).
 
 #### Wyszukiwanie
 
+Aby wyszukać element w stosie, musimy przejść stos w podobny sposób jak w wypadku wstawiania - usuwamy elementy z
+wierzchu aby uzyskać dostęp do elementów pod spodem, zapisując je na tymczasowy stos. Po znalezieniu elementu wracamy,
+tj. przekładamy elementy ze stosu tymczasowego z powrotem na swoje miejsce.
+
 #### Usuwanie
+
+Przy usuwaniu elementu ze stosu robimy to samo co podczas wstawiania, z różnicą że zamiast dodawać element po dojściu do
+danej pozycji, usuwamy dodatkowy element.
 
 ### Kolejka
 
@@ -152,13 +163,61 @@ usuwane. Podobnie może zostać zaimplementowana za pomocą listy lub tablicy.
 
 #### Tworzenie
 
+Jak w wypadku powyższych struktur, tworzymy pustą listę, a następnie dodajemy do niej elementy za pomocą funkcji
+`push()`. W tym celu inicjalizujemy podległą strukturę (tablicę lub listę) a następnie używamy właściwych im funkcji do
+dodawania elementów.
+
 #### Wstawianie
+
+Mechanizm jest bardzo podobny do stosu, z tą różnicą, że musimy usunąć z kolejki wszystkie elementy. Jest to spowodowane
+tym, że kiedy dojdziemy już do pożądanej pozycji i wstawimy element, musimy przywrócić wszystkie elementy które
+usunęliśmy tak, aby były one w odpowiedniej kolejności. Ponieważ kolejka jest strukturą FIFO (First In First Out),
+pierwszy element który ściągnęlismy, musimy wstawić jako pierwszy (czyli do pustej kolejki). W tym celu musimy ściągnąć
+resztę elementów by opróżnić kolejkę, a następnie dodać do niej element który usunęliśmy jako pierwszy (First In, czyli
+podobnie jak w wypadku stosu, możemy użyć tymczasowej kolejki do odpowiedniego uszeregowania elementów), a następnie
+kolejne.
+
+Wydajność wstawiania można by było poprawić używając Double Ended Queue (deque). Ten rodzaj kolejki umożliwia dodawanie
+i usuwanie elementów z zarówno przodu jak i tyłu kolejki.
 
 #### Dodawanie
 
+Dodawanie elementu do kolejki to po prostu dodanie go z tyłu kolejki. Nie usuwamy żadnych elementów zatem złożoność
+wynosi O(1).
+
 #### Wyszukiwanie
 
+Podobnie jak ze wstawianiem, przechodzimy przez kolejkę używając tego samego sposobu, również musząc opróżnić ją w
+całości a następnie zrekonstruować od zera.
+
 #### Usuwanie
+
+J.w. przechodzimy przez kolejkę, usuwamy interesujący nas element, ściągamy resztę elementów na kolejkę tymczasową, a
+następnie rekonstruujemy kolejkę.
+
+\newpage{}
+
+### Wyniki
+
+#### Tworzenie
+
+![tworzenie](img/create.png){ width=80% }
+
+#### Dodawanie
+
+![dodawanie](img/add.png){ width=80% }
+
+#### Wstawianie
+
+![wstawianie](img/insert.png){ width=80% }
+
+#### Szukanie
+
+![szukanie](img/search.png){ width=80% }
+
+#### Usuwanie
+
+![usuwanie](img/remove.png){ width=80% }
 
 ## Źródła
 
