@@ -2,9 +2,6 @@
 
 ## Metodyka testowa
 
-Potrzebne dane były generowane na miejscu za pomocą `std::mt19937` zaseedowanego stałą wartością, aby zapewnić
-niezmienność danych pomiędzy uruchomieniami.
-
 Platforma testowa:
 
 -   CPU: Ryzen 5 3600 3.6GHz
@@ -13,22 +10,80 @@ Platforma testowa:
 -   g++: 10.2.0
 -   Opcje kompilatora: `g++ src/main.cpp -Wall -Wextra -O`
 
-## Potencjalne źródła błędów
+### Opis metody
 
-### Implementacja malloc w libc
+#### Wymagania przypadków testowych
+
+-   niezmienność (generowanie takich samych liczb pomiędzy wywoływaniami programu, aby program pracował na tych samych
+    danych)
+-   porównywalność (takie dobranie parametrów aby operacja, np. wstawiania, była bezpośrednio porównywalna między dwoma
+    strukturami)
+
+#### Plik konfiguracyjny
+
+Składnia pliku `config.ini` wygląda w następujący sposób:
+
+```
+<output_filename>
+<task>
+<task>
+<task>
+...
+```
+
+`<task> = <type> <operation> <iterations> [instance_sizes]`
+
+`<type> = "array" | "list" | "stack" | "queue"`
+
+`<operation> = "create" | "push" | "insert" | "search" | "remove"`
+
+`<iterations> = liczba iteracji jaka ma być wykonana dla każdego rozmiaru instancji`
+
+`[instance_sizes] = <size> <size> <size> <size> ... (lista rozmiarów instancji)`
+
+#### Generowanie danych
+
+Potrzebne dane były generowane na miejscu za pomocą `std::mt19937` zainicjalizowanego stałym ziarnem, aby zapewnić
+niezmienność danych pomiędzy uruchomieniami programu. Dodatkowo, generator liczb pseudolosowych był resetowany do stanu
+początkowego po wykonaniu każdego zadania (czyli jednej linijki z pliku konfiguracyjnego) w celu określenia kryterium
+porównywalności; zakładając taką samą liczbę iteracji i wielkości instancji, wydajność jednej struktury może być
+bezpośrednio porównana do drugiej, ponieważ pracują na tych samych danych.
+
+#### Mierzenie czasu
+
+Otrzymując zadanie o danej ilości iteracji oraz listy wielkości instancji, program postępuje w następujący sposób:
+tworzone są po kolei kolejne instancje z listy i mierzony jest łączny czas wykonania wszystkich iteracji dla danej
+operacji. Wyjątkiem jest operacja tworzenia, wtedy mierzony jest łączny czas utworzenia struktury i wypełnienia jej
+danymi testowymi określoną ilość iteracji. N.p.:
+
+```
+config.ini:
+    [str]   [op]    [iter]  [instns]
+    array   insert  50      1000    10000   100000
+
+program:
+    zmierz laczny czas wykonania 50 operacji wstawiania dla n = 1000
+    zmierz laczny czas wykonania 50 operacji wstawiania dla n = 10000
+    zmierz laczny czas wykonania 50 operacji wstawiania dla n = 100000
+    etc.
+```
+
+### Potencjalne źródła błędów
+
+#### Implementacja malloc w libc
 
 Funkcja `malloc` nie rezerwuje od razu całej pamięci o jaką ją poprosimy, tylko aby zaoszczędzić pamięć rezerwuje
 kolejne bloki w momencie gdy chcemy użyć pamięci zwróconej przez `malloc`, np. wpisując do niej wartość. Skutkuje to
 tym, że podczas wypełniania tablicy, dla jej dużych rozmiarów, mogą być wykonywane kolejne alokacje, zwiększając w ten
 sposób czas wykonania.
 
-### Implementacja memcpy
+#### Implementacja memcpy
 
 W konstruktorze kopiującym m.in. wektora używana jest funkcja `memcpy` aby zminimalizować czas kopiowania elementów.
 Analiza pamięci fizycznej wykazała że kopia wektora o wielkości 1GiB nie zużywa pamięci. Możliwe że mamy do czynienia z
 mechanizmem copy-on-write.
 
-### Dynamic dispatch
+#### Dynamic dispatch
 
 Ponieważ używamy polimorfizmu aby nie pisać każdego przypadku testowego osobno dla każdej struktury danych, wywołanie
 metody związanej z daną operacją wykorzystuje Vtable i wymagają wykonania skoku. Może to zwiększać czas wywołania dla
@@ -36,13 +91,6 @@ każdej iteracji o stałą wartość.
 
 Możliwe rozwiązanie: wrzucić kod benchmarkujący do klasy, żeby wykonać dynamic dispatch tylko raz (przy wywołaniu metody
 benchmark) a następnie zostać w obrębie klasy.
-
-## Wymagania przypadków testowych
-
--   niezmienność (generowanie takich samych liczb pomiędzy wywoływaniami programu, aby program pracował na tych samych
-    danych)
--   porównywalność (takie dobranie parametrów aby operacja, np. wstawiania, była bezpośrednio porównywalna między dwoma
-    strukturami)
 
 ## Opis badanych operacji
 
@@ -195,29 +243,86 @@ całości a następnie zrekonstruować od zera.
 J.w. przechodzimy przez kolejkę, usuwamy interesujący nas element, ściągamy resztę elementów na kolejkę tymczasową, a
 następnie rekonstruujemy kolejkę.
 
-\newpage{}
+## Wyniki
 
-### Wyniki
-
-#### Tworzenie
+### Tworzenie
 
 ![tworzenie](img/create.png){ width=80% }
 
-#### Dodawanie
+### Dodawanie
 
 ![dodawanie](img/add.png){ width=80% }
 
-#### Wstawianie
+### Wstawianie
 
 ![wstawianie](img/insert.png){ width=80% }
 
-#### Szukanie
+### Szukanie
 
 ![szukanie](img/search.png){ width=80% }
 
-#### Usuwanie
+### Usuwanie
 
 ![usuwanie](img/remove.png){ width=80% }
+
+## Analiza i wnioski
+
+### Tworzenie
+
+**Złożoność operacji tworzenia wynosi O(n) dla wszystkich struktur.**
+
+Jest to łatwo zrozumiałe, ponieważ wszystkie struktury tworzone są poprzez zapętlone wywoływanie funkcji `add()`, która
+dodaje do listy po jednym elemencie.
+
+Czas utworzenia stosu dla najmniejszego rozmiaru instancji jest widocznie nienaturalnie wysoki. W momencie kończenia
+raportu nie jest znana przyczyna tego wyniku. Testy na innych wartościach ziarna nie pozbyły się problemu, zatem można
+wywnioskować że problem jest deterministyczny i niezależny od danych.
+
+### Dodawanie
+
+**Złożoność operacji dodawania wynosi O(1) dla wszystkich struktur.**
+
+Dodanie elementu na koniec lub początek struktury to jedna operacja i nie jest zależna od wielkości instancji. W
+niektórych przypadkach może skutkować realokacją i zająć bardzo długi czas (tablica dynamiczna), jednak duża szybkość
+dodawania reszty elementów amortyzuje ten koszt, stawiając dynamiczną tablicę pod listą jeżeli chodzi o szybkość tejże
+operacji.
+
+Podobnie jak w wypadku tworzenia i stosu, nienaturalnie wysoki czas wykonania tej operacji dla tablicy o wielkości
+instancji 1 000 000 nie jest znany, lecz wiadomo jest że nie jest zależny od danych losowych.
+
+### Wstawianie
+
+**Złożoność operacji wstawiania wynosi O(n) dla wszystkich struktur.**
+
+W wypadku tablicy, aby wstawić element na pozycji `i`, musimy elementy `[i+1; n)` przenieść o jedną pozycję w lewo. W
+wypadku pozostałych struktur (wszystkie są zaimplementowane na linkowanych listach), ponieważ wstawiamy w oparciu o
+indeks, musimy najpierw dostać się do niego, a operacja dostępu dla list wynosi **O(n)**.
+
+### Szukanie
+
+**Złożoność operacji wyszukiwania wynosi O(n) dla wszystkich struktur.**
+
+Ponieważ dane nie są w żaden sposób sortowane, a my szukamy zupełnie losowej wartości, złożoność wyszukiwania wynosi
+**O(n)**. Dla większych wielkości instancji czas wyszukiwania maleje, ponieważ test operacji wyszukiwania
+zaimplementowany jest w ten sposób, że losowana jest kolejna wartość i jest ona wyszukiwana w tablicy. Wiadomo że dla
+większych wielkości instancji mamy większą szansę że nasza szukana wartość wystąpiła pośród losowo wygenerowanych
+danych.
+
+Słabą wydajność kolejki tłumaczy fakt że musimy i tak przechodzić przez całą kolejkę aby ją odbudować, opisany w
+[opisie operacji](#).
+
+Dodatkowo, przykład dobrze pokazuje zalety tablicy: lokalność elementów i brak skoków powoduje że jest o rząd wielkości
+szybsza od innych struktur - głównie dzięki wysokiej utylizacji cache, które zmniejsza czas dostępu do każdego elementu.
+
+### Usuwanie
+
+**Złożoność operacji usuwania wynosi O(n) dla wszystkich struktur.**
+
+Złożoność jest taka jaka jest z powodów podobnych jak w operacji wstawiania - kopiowanie danych w tablicy, dostęp do
+elementu w innych strukturach. Dodatkowo również tutaj widoczna jest wysoka utylizacja systemu cache przez tablicę,
+skutkująca rządem wielkości niższym czasem wykonania.
+
+Z niewiadomego powodu przy wstawianiu tablica nie radzi sobie lepiej niż inne struktury. Powód nie jest znany.
 
 ## Źródła
 

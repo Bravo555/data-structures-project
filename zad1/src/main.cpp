@@ -66,7 +66,7 @@ int main() {
     out_file << "struktura,operacja,iteracje,instancja,mikrosekundy" << std::endl;
 
     std::mt19937 mt;
-    std::uniform_int_distribution<> dist(-10000, 10000);
+    std::uniform_int_distribution<> dist(-100000, 100000);
 
     for(auto task: tasks) {
         std::string name = task.type + " " + task.operation;
