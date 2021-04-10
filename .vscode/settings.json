@@ -63,5 +63,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp"
-    }
+    },
+    "rust-analyzer.linkedProjects": [
+        "zad2/rust/Cargo.toml"
+    ]
 }
