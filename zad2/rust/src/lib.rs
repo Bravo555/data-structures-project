@@ -1,10 +1,8 @@
-use std::{fmt::Debug, mem};
-
-pub fn quicksort<T: Ord + Debug>(arr: &mut [T]) {
+pub fn quicksort<T: Ord>(arr: &mut [T]) {
     qs_inner(arr)
 }
 
-fn qs_inner<T: Ord + Debug>(arr: &mut [T]) {
+fn qs_inner<T: Ord>(arr: &mut [T]) {
     match arr.len() {
         0 | 1 => return,
         2 => {
@@ -28,10 +26,6 @@ fn qs_inner<T: Ord + Debug>(arr: &mut [T]) {
             left += 1;
         } else if &rest[right as usize] > pivot {
             // right happens to be on the right side, we can just decrement to awoid unnecessary swaps
-            println!(
-                "pivot = {:?}, left = {:?}, right = {:?}, arr = {:?}",
-                pivot, left, right, rest
-            );
             right -= 1;
         } else {
             // element on the right is smaller or equal to pivot, on the left is bigger, swap them and advance from both
@@ -42,14 +36,6 @@ fn qs_inner<T: Ord + Debug>(arr: &mut [T]) {
         }
     }
 
-    println!(
-        "pivot = {:?}, left = {:?}, right = {:?}, arr = {:?}",
-        pivot, left, right, rest
-    );
-
-    // l = 7
-    // r = 6
-    // [6, 4, 3, 0, 1, 5, 2, 7, 9, 8]
     arr.swap(0, left as usize);
     let (left, right) = arr.split_at_mut(left as usize);
     qs_inner(left);
@@ -58,7 +44,7 @@ fn qs_inner<T: Ord + Debug>(arr: &mut [T]) {
 
 // Now only works for unsigned integers
 pub fn radixsort(arr: &mut [u32]) {
-    const BITS: u32 = 4;
+    const BITS: u32 = 8;
     const BASE: usize = 2usize.pow(BITS);
     let mut current_pos = 0;
     let mut output: Vec<u32> = vec![0; arr.len()];
@@ -67,7 +53,7 @@ pub fn radixsort(arr: &mut [u32]) {
     // for int, it would be 32bits / 4bits = 8 rounds
     let max = *arr.iter().max().unwrap();
 
-    while dbg!(2u32.pow((current_pos) * BITS)) <= max {
+    while current_pos * BITS < 32 && 2u32.pow(current_pos * BITS) <= max {
         let mut counters: [usize; BASE] = [0; BASE];
         for i in arr.iter() {
             let digit = ((*i as usize) >> (current_pos * BITS)) & (BASE - 1);
@@ -78,19 +64,14 @@ pub fn radixsort(arr: &mut [u32]) {
             counters[i] += counters[i - 1];
         }
 
-        for x in arr.iter().rev() {
+        for x in arr.into_iter().rev() {
             let digit = ((*x as usize) >> (current_pos * BITS)) & (BASE - 1);
             counters[digit] -= 1;
             output[counters[digit]] = *x;
         }
 
-        dbg!(&output);
         arr.swap_with_slice(output.as_mut_slice());
         current_pos += 1;
-    }
-
-    if current_pos % 2 != 0 {
-        arr.swap_with_slice(output.as_mut_slice());
     }
 }
 
