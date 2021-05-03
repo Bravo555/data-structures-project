@@ -4,11 +4,11 @@ use rand::{distributions::Uniform, prelude::*};
 use zad2_sorting::{quicksort, radixsort};
 
 fn main() {
-    const N: usize = 200_000_000;
+    const N: usize = 1_000_000;
     println!("measuring: {} elements", N);
 
     let mut rng = SmallRng::seed_from_u64(0);
-    let dist = Uniform::from(0..1_000_000);
+    let dist = Uniform::from(0..1000);
     let mut arr: Vec<u32> = (0..N).map(|_| dist.sample(&mut rng)).collect();
 
     let mut quicksort_arr = arr.clone();

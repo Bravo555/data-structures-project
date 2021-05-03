@@ -19,6 +19,7 @@ pub fn benchmark(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             );
         });
+
         group.bench_with_input(BenchmarkId::new("radixsort", size), &size, |b, _size| {
             b.iter_batched_ref(
                 || arr.clone(),
@@ -26,6 +27,7 @@ pub fn benchmark(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             );
         });
+
         group.bench_with_input(BenchmarkId::new("stdsort", size), &size, |b, _size| {
             b.iter_batched_ref(
                 || arr.clone(),
