@@ -65,6 +65,7 @@
         "variant": "cpp"
     },
     "rust-analyzer.linkedProjects": [
-        "zad2/rust/Cargo.toml"
+        "zad2/rust/Cargo.toml",
+        "zad3/Cargo.toml"
     ]
 }
