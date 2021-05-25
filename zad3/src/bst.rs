@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::tree::Tree;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Bst<K: Ord, V> {
     root: Link<K, V>,
 }
@@ -31,7 +31,7 @@ impl<K: Ord, V> Tree<K, V> for Bst<K, V> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Node<K: Ord, V> {
     key: K,
     val: V,
@@ -50,7 +50,7 @@ impl<K: Ord, V> Node<K, V> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Link<K: Ord, V>(Option<Box<Node<K, V>>>);
 
 impl<K: Ord, V> Link<K, V> {
@@ -74,7 +74,9 @@ impl<K: Ord, V> Link<K, V> {
                 // to store a different value under the same key we can either replace it or return some value that
                 // signals we need to remove old value first.
                 // here, we'll just do nothing
-                Ordering::Equal => {}
+                Ordering::Equal => {
+                    println!("collision");
+                }
             },
         }
     }

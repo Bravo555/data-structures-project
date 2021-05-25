@@ -14,7 +14,7 @@ pub fn benchmark(c: &mut Criterion) {
         create_g.bench_with_input(BenchmarkId::new("BST", size), &size, |b, _size| {
             b.iter_batched_ref(
                 || Bst::new(),
-                |mut tree| {
+                |tree| {
                     for i in &arr {
                         tree.insert(*i, *i);
                     }
@@ -26,7 +26,7 @@ pub fn benchmark(c: &mut Criterion) {
         create_g.bench_with_input(BenchmarkId::new("RbTree", size), &size, |b, _size| {
             b.iter_batched_ref(
                 || RbTree::new(),
-                |mut tree| {
+                |tree| {
                     for i in &arr {
                         tree.insert(*i, *i);
                     }
@@ -40,21 +40,21 @@ pub fn benchmark(c: &mut Criterion) {
     let mut insert_g = c.benchmark_group("insert");
     for &size in &sizes {
         let arr: Vec<_> = (0..size).map(|_| dist.sample(&mut rng)).collect();
+        let mut bst = Bst::new();
+        for i in &arr {
+            bst.insert(*i, *i);
+        }
+        let mut rbtree = RbTree::new();
+        for i in &arr {
+            rbtree.insert(*i, *i);
+        }
 
         insert_g.bench_with_input(BenchmarkId::new("BST", size), &size, |b, _size| {
             b.iter_batched_ref(
-                || {
-                    let mut tree = Bst::new();
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
-                    tree
-                },
-                |mut tree| {
-                    for i in &arr {
-                        let val = dist.sample(&mut rng);
-                        tree.insert(val, val);
-                    }
+                || bst.clone(),
+                |tree| {
+                    let val = dist.sample(&mut rng);
+                    tree.insert(val, val);
                 },
                 criterion::BatchSize::SmallInput,
             );
@@ -62,18 +62,10 @@ pub fn benchmark(c: &mut Criterion) {
 
         insert_g.bench_with_input(BenchmarkId::new("RbTree", size), &size, |b, _size| {
             b.iter_batched_ref(
-                || {
-                    let mut tree = Bst::new();
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
-                    tree
-                },
-                |mut tree| {
-                    for i in &arr {
-                        let val = dist.sample(&mut rng);
-                        tree.insert(val, val);
-                    }
+                || rbtree.clone(),
+                |tree| {
+                    let val = dist.sample(&mut rng);
+                    tree.insert(val, val);
                 },
                 criterion::BatchSize::SmallInput,
             );
@@ -84,20 +76,22 @@ pub fn benchmark(c: &mut Criterion) {
     let mut get_g = c.benchmark_group("find");
     for &size in &sizes {
         let arr: Vec<_> = (0..size).map(|_| dist.sample(&mut rng)).collect();
+        let mut bst = Bst::new();
+        for i in &arr {
+            bst.insert(*i, *i);
+        }
+        let mut rbtree = RbTree::new();
+        for i in &arr {
+            rbtree.insert(*i, *i);
+        }
+        let index_dist = Uniform::from(0..arr.len());
 
         get_g.bench_with_input(BenchmarkId::new("BST", size), &size, |b, _size| {
             b.iter_batched_ref(
-                || {
-                    let mut tree = Bst::new();
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
-                    tree
-                },
-                |mut tree| {
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
+                || bst.clone(),
+                |tree| {
+                    let val = arr[index_dist.sample(&mut rng)];
+                    tree.get(&val);
                 },
                 criterion::BatchSize::SmallInput,
             );
@@ -105,17 +99,10 @@ pub fn benchmark(c: &mut Criterion) {
 
         get_g.bench_with_input(BenchmarkId::new("RbTree", size), &size, |b, _size| {
             b.iter_batched_ref(
-                || {
-                    let mut tree = Bst::new();
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
-                    tree
-                },
-                |mut tree| {
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
+                || bst.clone(),
+                |tree| {
+                    let val = arr[index_dist.sample(&mut rng)];
+                    tree.get(&val);
                 },
                 criterion::BatchSize::SmallInput,
             );
@@ -126,20 +113,22 @@ pub fn benchmark(c: &mut Criterion) {
     let mut remove_g = c.benchmark_group("remove");
     for &size in &sizes {
         let arr: Vec<_> = (0..size).map(|_| dist.sample(&mut rng)).collect();
+        let mut bst = Bst::new();
+        for i in &arr {
+            bst.insert(*i, *i);
+        }
+        let mut rbtree = RbTree::new();
+        for i in &arr {
+            rbtree.insert(*i, *i);
+        }
+        let index_dist = Uniform::from(0..arr.len());
 
         remove_g.bench_with_input(BenchmarkId::new("BST", size), &size, |b, _size| {
             b.iter_batched_ref(
-                || {
-                    let mut tree = Bst::new();
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
-                    tree
-                },
-                |mut tree| {
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
+                || bst.clone(),
+                |tree| {
+                    let val = arr[index_dist.sample(&mut rng)];
+                    tree.remove(&val);
                 },
                 criterion::BatchSize::SmallInput,
             );
@@ -147,17 +136,10 @@ pub fn benchmark(c: &mut Criterion) {
 
         remove_g.bench_with_input(BenchmarkId::new("RbTree", size), &size, |b, _size| {
             b.iter_batched_ref(
-                || {
-                    let mut tree = Bst::new();
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
-                    tree
-                },
-                |mut tree| {
-                    for i in &arr {
-                        tree.insert(*i, *i);
-                    }
+                || rbtree.clone(),
+                |tree| {
+                    let val = arr[index_dist.sample(&mut rng)];
+                    tree.remove(&val);
                 },
                 criterion::BatchSize::SmallInput,
             );

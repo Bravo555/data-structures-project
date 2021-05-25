@@ -1,0 +1,81 @@
+type,operation,instance,time
+BST,create,100000,18376
+BST,insert,100000,2240
+BST,search,100000,1691
+BST,remove,100000,5038
+Red-Black Tree,create,100000,44836
+Red-Black Tree,insert,100000,6474
+Red-Black Tree,search,100000,2670
+Red-Black Tree,remove,100000,5249
+BST,create,200000,38801
+BST,insert,200000,3221
+BST,search,200000,3192
+BST,remove,200000,8267
+Red-Black Tree,create,200000,118595
+Red-Black Tree,insert,200000,7938
+Red-Black Tree,search,200000,3213
+Red-Black Tree,remove,200000,7333
+BST,create,300000,65040
+BST,insert,300000,3844
+BST,search,300000,4140
+BST,remove,300000,11433
+Red-Black Tree,create,300000,210121
+Red-Black Tree,insert,300000,9930
+Red-Black Tree,search,300000,4111
+Red-Black Tree,remove,300000,8747
+BST,create,400000,99550
+BST,insert,400000,5284
+BST,search,400000,4214
+BST,remove,400000,12334
+Red-Black Tree,create,400000,306247
+Red-Black Tree,insert,400000,9824
+Red-Black Tree,search,400000,4454
+Red-Black Tree,remove,400000,9433
+BST,create,500000,137997
+BST,insert,500000,5595
+BST,search,500000,4442
+BST,remove,500000,16227
+Red-Black Tree,create,500000,425410
+Red-Black Tree,insert,500000,11414
+Red-Black Tree,search,500000,6035
+Red-Black Tree,remove,500000,11543
+BST,create,600000,184589
+BST,insert,600000,6870
+BST,search,600000,5094
+BST,remove,600000,19763
+Red-Black Tree,create,600000,506064
+Red-Black Tree,insert,600000,11069
+Red-Black Tree,search,600000,5107
+Red-Black Tree,remove,600000,9712
+BST,create,700000,271620
+BST,insert,700000,5637
+BST,search,700000,4551
+BST,remove,700000,15726
+Red-Black Tree,create,700000,637865
+Red-Black Tree,insert,700000,12086
+Red-Black Tree,search,700000,6376
+Red-Black Tree,remove,700000,11554
+BST,create,800000,307768
+BST,insert,800000,6324
+BST,search,800000,5075
+BST,remove,800000,17967
+Red-Black Tree,create,800000,728325
+Red-Black Tree,insert,800000,11904
+Red-Black Tree,search,800000,6013
+Red-Black Tree,remove,800000,11007
+BST,create,900000,381521
+BST,insert,900000,8327
+BST,search,900000,7181
+BST,remove,900000,66242
+Red-Black Tree,create,900000,872095
+Red-Black Tree,insert,900000,11775
+Red-Black Tree,search,900000,5629
+Red-Black Tree,remove,900000,10935
+BST,create,1000000,410056
+BST,insert,1000000,6628
+BST,search,1000000,5035
+BST,remove,1000000,26475
+Red-Black Tree,create,1000000,967268
+Red-Black Tree,insert,1000000,12390
+Red-Black Tree,search,1000000,5869
+Red-Black Tree,remove,1000000,10958

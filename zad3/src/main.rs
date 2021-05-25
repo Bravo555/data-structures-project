@@ -1,9 +1,7 @@
 use rand::{distributions::Uniform, prelude::*};
-use rand_distr::{Binomial, Normal};
-use std::collections::{hash_map::RandomState, HashSet};
-use std::iter::FromIterator;
-use std::time::Instant;
-use std::{collections::BTreeMap, time::Duration};
+use std::fs::File;
+use std::io::Write;
+use std::time::{Duration, Instant};
 use zad3::{Bst, RbTree, Tree};
 
 fn main() {
@@ -18,14 +16,17 @@ fn main() {
 
     let dist = Uniform::new_inclusive(0, u64::MAX);
 
+    let mut results_file = File::create("results.csv").unwrap();
+    writeln!(results_file, "type,operation,instance,time").unwrap();
+
     for n in sizes {
-        let mut rng = SmallRng::seed_from_u64(0);
-        let arr: Vec<u64> = (0..n).map(|_| dist.sample(&mut rng)).collect();
         let mut trees: [Box<dyn Tree<u64, u64>>; 2] =
             [Box::new(Bst::new()), Box::new(RbTree::new())];
 
         println!("N = {:?}", n);
         for tree in &mut trees {
+            let mut rng = SmallRng::seed_from_u64(0);
+            let arr: Vec<u64> = (0..n).map(|_| dist.sample(&mut rng)).collect();
             println!("{}", tree.name());
             // create
             {
@@ -37,11 +38,20 @@ fn main() {
                     }
                 });
                 println!("{:?}", create_time);
+                writeln!(
+                    results_file,
+                    "{},{},{},{}",
+                    tree.name(),
+                    "create",
+                    n,
+                    &create_time.as_micros()
+                )
+                .unwrap();
             }
 
             // insert
             {
-                let n_insrt = 100_000;
+                let n_insrt = 10_000;
                 print!("inserting {} elements:", n_insrt);
                 let insert_time = bench(|| {
                     for _ in 0..n_insrt {
@@ -50,11 +60,20 @@ fn main() {
                     }
                 });
                 println!("{:?}", insert_time);
+                writeln!(
+                    results_file,
+                    "{},{},{},{}",
+                    tree.name(),
+                    "insert",
+                    n,
+                    &insert_time.as_micros()
+                )
+                .unwrap();
             }
 
             // get
             {
-                let n_searches: usize = 1_000;
+                let n_searches: usize = 10_000;
                 let index_dist = Uniform::from(0..arr.len());
                 let keys: Vec<_> = (0..n_searches)
                     .map(|_| arr[index_dist.sample(&mut rng)])
@@ -67,11 +86,20 @@ fn main() {
                     }
                 });
                 println!("{:?}", search_time);
+                writeln!(
+                    results_file,
+                    "{},{},{},{}",
+                    tree.name(),
+                    "search",
+                    n,
+                    &search_time.as_micros()
+                )
+                .unwrap();
             }
 
             // remove
             {
-                let n_deletions: usize = 1_000;
+                let n_deletions: usize = 10_000;
                 let index_dist = Uniform::from(0..arr.len());
                 let keys = (0..arr.len() - 1)
                     .collect::<Vec<_>>()
@@ -89,6 +117,15 @@ fn main() {
                     }
                 });
                 println!("{:?}", remove_time);
+                writeln!(
+                    results_file,
+                    "{},{},{},{}",
+                    tree.name(),
+                    "remove",
+                    n,
+                    &remove_time.as_micros()
+                )
+                .unwrap();
             }
 
             println!("");
