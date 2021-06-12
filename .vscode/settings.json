@@ -66,6 +66,7 @@
     },
     "rust-analyzer.linkedProjects": [
         "zad2/rust/Cargo.toml",
-        "zad3/Cargo.toml"
+        "zad3/Cargo.toml",
+        "zad4/Cargo.toml"
     ]
 }
