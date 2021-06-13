@@ -1,8 +1,13 @@
+use rand::thread_rng;
 use zad4::*;
 
 fn main() {
+    let mut rng = thread_rng();
+
     let mut matrix = AdjMatrix::new();
     let mut list = AdjList::new();
+
+    let random_graph = AdjMatrix::random_connected(20, 0.5, &mut rng);
 
     matrix.add_node(1);
     matrix.add_node(2);
@@ -36,4 +41,10 @@ fn main() {
 
     dbg!(matrix.dijkstra(0));
     dbg!(list.dijkstra(0));
+
+    dbg!(matrix.memory());
+    dbg!(list.memory());
+
+    println!("{:?}", &random_graph);
+    dbg!(random_graph.memory());
 }

@@ -1,3 +1,6 @@
+use rand::{distributions::Uniform, prelude::*};
+use std::{collections::HashSet, mem};
+
 type NodeIndex = u32;
 type Weight = i32;
 
@@ -19,6 +22,12 @@ pub trait Graph {
     /// Returns a weight of a connection from `n1` to `n2` if it exists
     /// If it doesn't exist, the function panics.
     fn distance(&self, n1: NodeIndex, n2: NodeIndex) -> Weight;
+
+    /// Return an amount of heap allocated memory necessary to store the graph's nodes and vertices.
+    /// This is usually calculated by multiplying the underlying vector's length by the size of the stored type.
+    /// Depending on an actual memory allocator used, the real amount of memory taken may vary.
+    // TODO: consider whether to print vector's length or capacity (latter one is actual memory used and we can explain amortisation)
+    fn memory(&self) -> usize;
 
     /// Returns best paths to all the nodes from the selected start node using Dijkstra's algorithm
     fn dijkstra(&self, start: NodeIndex) -> Vec<(NodeIndex, NodeIndex, Weight)> {
@@ -75,6 +84,32 @@ impl AdjMatrix {
             len: 0,
         }
     }
+
+    pub fn random_connected(num_nodes: usize, edge_probability: f32, rng: &mut impl Rng) -> Self {
+        let mut graph = Self::new();
+        graph.add_node((num_nodes - 1) as NodeIndex);
+
+        // first we connect all unordered pairs of the graph so that it is connected
+        let mut unvisited_set = HashSet::new();
+
+        for node in 0..graph.len() {
+            unvisited_set.insert(node);
+        }
+
+        let mut unvisited_set = unvisited_set.into_iter().collect::<Vec<_>>();
+        unvisited_set.shuffle(rng);
+        let mut cur_vertex = unvisited_set.pop().expect("no nodes in the graph");
+        let weight_dist = Uniform::from(0..=20);
+
+        while !unvisited_set.is_empty() {
+            let adj_vertex = unvisited_set.pop().unwrap();
+            let weight = weight_dist.sample(rng);
+            graph.connect(cur_vertex, adj_vertex, weight);
+            cur_vertex = adj_vertex;
+        }
+
+        graph
+    }
 }
 
 impl Graph for AdjMatrix {
@@ -105,6 +140,10 @@ impl Graph for AdjMatrix {
     fn distance(&self, n1: NodeIndex, n2: NodeIndex) -> i32 {
         let id1 = n1 * self.len + n2;
         self.mat[id1 as usize]
+    }
+
+    fn memory(&self) -> usize {
+        self.mat.len() * mem::size_of::<Weight>()
     }
 }
 
@@ -163,5 +202,9 @@ impl Graph for AdjList {
             .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
             .unwrap()
             .2
+    }
+
+    fn memory(&self) -> usize {
+        self.adjs.len() * mem::size_of::<(NodeIndex, NodeIndex, Weight)>()
     }
 }
