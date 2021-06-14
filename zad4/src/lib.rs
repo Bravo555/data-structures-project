@@ -1,5 +1,8 @@
-use rand::{distributions::Uniform, prelude::*};
-use std::{collections::HashSet, mem};
+mod adj_list;
+mod adj_matrix;
+
+pub use adj_list::AdjList;
+pub use adj_matrix::AdjMatrix;
 
 type NodeIndex = u32;
 type Weight = i32;
@@ -28,6 +31,8 @@ pub trait Graph {
     /// Depending on an actual memory allocator used, the real amount of memory taken may vary.
     // TODO: consider whether to print vector's length or capacity (latter one is actual memory used and we can explain amortisation)
     fn memory(&self) -> usize;
+
+    fn num_neighbours(&self, n: NodeIndex) -> usize;
 
     /// Returns best paths to all the nodes from the selected start node using Dijkstra's algorithm
     fn dijkstra(&self, start: NodeIndex) -> Vec<(NodeIndex, NodeIndex, Weight)> {
@@ -68,143 +73,5 @@ pub trait Graph {
         }
 
         finished
-    }
-}
-
-#[derive(Debug)]
-pub struct AdjMatrix {
-    mat: Vec<Weight>,
-    len: NodeIndex,
-}
-
-impl AdjMatrix {
-    pub fn new() -> Self {
-        AdjMatrix {
-            mat: Vec::new(),
-            len: 0,
-        }
-    }
-
-    pub fn random_connected(num_nodes: usize, edge_probability: f32, rng: &mut impl Rng) -> Self {
-        let mut graph = Self::new();
-        graph.add_node((num_nodes - 1) as NodeIndex);
-
-        // first we connect all unordered pairs of the graph so that it is connected
-        let mut unvisited_set = HashSet::new();
-
-        for node in 0..graph.len() {
-            unvisited_set.insert(node);
-        }
-
-        let mut unvisited_set = unvisited_set.into_iter().collect::<Vec<_>>();
-        unvisited_set.shuffle(rng);
-        let mut cur_vertex = unvisited_set.pop().expect("no nodes in the graph");
-        let weight_dist = Uniform::from(0..=20);
-
-        while !unvisited_set.is_empty() {
-            let adj_vertex = unvisited_set.pop().unwrap();
-            let weight = weight_dist.sample(rng);
-            graph.connect(cur_vertex, adj_vertex, weight);
-            cur_vertex = adj_vertex;
-        }
-
-        graph
-    }
-}
-
-impl Graph for AdjMatrix {
-    fn len(&self) -> NodeIndex {
-        self.len
-    }
-
-    fn add_node(&mut self, idx: NodeIndex) {
-        if idx as usize > self.mat.len() {
-            self.mat.resize(((idx + 1) * (idx + 1)) as usize, 0);
-            self.len = idx + 1;
-        }
-    }
-
-    fn connect(&mut self, n1: NodeIndex, n2: NodeIndex, weight: i32) {
-        let id1 = n1 * self.len + n2;
-        let id2 = n2 * self.len + n1;
-
-        self.mat[id1 as usize] = weight;
-        self.mat[id2 as usize] = weight;
-    }
-
-    fn connected(&self, n1: NodeIndex, n2: NodeIndex) -> bool {
-        let id1 = n1 * self.len + n2;
-        self.mat[id1 as usize] != 0
-    }
-
-    fn distance(&self, n1: NodeIndex, n2: NodeIndex) -> i32 {
-        let id1 = n1 * self.len + n2;
-        self.mat[id1 as usize]
-    }
-
-    fn memory(&self) -> usize {
-        self.mat.len() * mem::size_of::<Weight>()
-    }
-}
-
-#[derive(Debug)]
-pub struct AdjList {
-    max_node: NodeIndex,
-    adjs: Vec<(NodeIndex, NodeIndex, Weight)>,
-}
-
-impl AdjList {
-    pub fn new() -> Self {
-        AdjList {
-            max_node: 0,
-            adjs: Vec::new(),
-        }
-    }
-}
-
-impl Graph for AdjList {
-    fn len(&self) -> NodeIndex {
-        self.max_node + 1
-    }
-
-    fn add_node(&mut self, node: NodeIndex) {
-        if node > self.max_node {
-            self.max_node = node;
-        }
-    }
-
-    fn connect(&mut self, n1: NodeIndex, n2: NodeIndex, weight: i32) {
-        if n1 > self.max_node || n2 > self.max_node {
-            panic!("node does not exist")
-        }
-
-        if self
-            .adjs
-            .iter_mut()
-            .find(|(u, v, _)| *u == n1 && *v == n2)
-            .map(|(_, _, w)| *w = weight)
-            .is_none()
-        {
-            self.adjs.push((n1, n2, weight));
-        }
-    }
-
-    fn connected(&self, n1: NodeIndex, n2: NodeIndex) -> bool {
-        self.adjs
-            .iter()
-            .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
-            .is_some()
-    }
-
-    fn distance(&self, n1: NodeIndex, n2: NodeIndex) -> i32 {
-        self.adjs
-            .iter()
-            .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
-            .unwrap()
-            .2
-    }
-
-    fn memory(&self) -> usize {
-        self.adjs.len() * mem::size_of::<(NodeIndex, NodeIndex, Weight)>()
     }
 }

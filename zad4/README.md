@@ -32,3 +32,19 @@ konfiguracyjnego, program kolejno będzie generował instancje o rozmiarze podan
 będą wykonywane operacje wstawiania, wyszukiwania oraz usuwania.
 
 ## Wyniki i analiza
+
+## Pytania na które warto odpowiedzieć
+
+> Która z reprezentacji jest odporna na zmiany gęstości grafu?
+
+Macierz sąsiedztwa.
+
+> Która jest najtrudniejsza w implementacji ze względu na możliwość popełnienia błędów oraz liczbę możliwych miejsc, w
+> których błędy można popełnić?
+
+TODO/pęk?
+
+> Która z reprezentacji jest najefektywniejsza pamięciowo, pamięciowo-czasowo i czasowo (w badanym zastosowaniu)?
+
+-   gęste grafy - macierz sąsiedztwa
+-   rzadkie grafy - lista sąsiedztwa/pęk
