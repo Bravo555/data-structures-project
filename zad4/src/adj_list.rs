@@ -117,7 +117,10 @@ impl Graph for AdjList {
     }
 
     fn memory(&self) -> usize {
-        self.nodes.len() * mem::size_of::<(NodeIndex, NodeIndex, Weight)>()
+        // self.nodes.len() * mem::size_of::<(NodeIndex, NodeIndex, Weight)>()
+        self.nodes.iter().fold(0, |acc, node| {
+            acc + node.len() * mem::size_of::<(NodeIndex, Weight)>()
+        }) + self.nodes.len() * mem::size_of::<Vec<(NodeIndex, Weight)>>()
     }
 
     fn num_neighbours(&self, _n: crate::NodeIndex) -> usize {
@@ -128,7 +131,7 @@ impl Graph for AdjList {
         todo!()
     }
 
-    fn node_neighbours(&self, n: NodeIndex) -> Vec<NodeIndex> {
-        self.nodes[n as usize].iter().map(|(n2, _)| *n2).collect()
+    fn node_neighbours(&self, n: NodeIndex) -> Vec<(NodeIndex, Weight)> {
+        self.nodes[n as usize].clone()
     }
 }

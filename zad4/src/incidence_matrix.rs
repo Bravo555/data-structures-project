@@ -139,7 +139,7 @@ impl Graph for IncidenceMatrix {
         todo!()
     }
 
-    fn node_neighbours(&self, n: crate::NodeIndex) -> Vec<NodeIndex> {
+    fn node_neighbours(&self, n: crate::NodeIndex) -> Vec<(NodeIndex, Weight)> {
         let nodes = self.nodes as usize;
         let n = n as usize;
         self.mat
@@ -152,7 +152,7 @@ impl Graph for IncidenceMatrix {
                     .position(|(i, w)| *w != 0 && i != n)
                     .unwrap();
 
-                Some(n2 as NodeIndex)
+                Some((n2 as NodeIndex, *w))
             })
             .collect::<Vec<_>>()
     }

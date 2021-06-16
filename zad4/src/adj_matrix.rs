@@ -140,14 +140,14 @@ impl Graph for AdjMatrix {
         connected
     }
 
-    fn node_neighbours(&self, n: crate::NodeIndex) -> Vec<NodeIndex> {
+    fn node_neighbours(&self, n: crate::NodeIndex) -> Vec<(NodeIndex, Weight)> {
         let start_index = (n * self.len) as usize;
         let end_index = (start_index + self.len as usize) as usize;
         self.mat[start_index..end_index]
             .iter()
             .enumerate()
             .filter(|(_, w)| **w != 0)
-            .map(|(i, _)| i as NodeIndex)
+            .map(|(u, &w)| (u as NodeIndex, w as Weight))
             .collect()
     }
 }

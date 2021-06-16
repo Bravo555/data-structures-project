@@ -146,7 +146,8 @@ impl Graph for Bundle {
     }
 
     fn memory(&self) -> usize {
-        self.adjs.len() * mem::size_of::<(NodeIndex, NodeIndex, Weight)>()
+        self.node_indexes.len() * mem::size_of::<usize>()
+            + self.adjs.len() * mem::size_of::<(NodeIndex, Weight)>()
     }
 
     fn num_neighbours(&self, _n: crate::NodeIndex) -> usize {
@@ -157,7 +158,7 @@ impl Graph for Bundle {
         todo!()
     }
 
-    fn node_neighbours(&self, n: NodeIndex) -> Vec<NodeIndex> {
+    fn node_neighbours(&self, n: NodeIndex) -> Vec<(NodeIndex, Weight)> {
         self.adjs
             .iter()
             .take(
@@ -167,7 +168,7 @@ impl Graph for Bundle {
                     .unwrap_or(&self.adjs.len()),
             )
             .skip(self.node_indexes[n as usize])
-            .map(|(n1, _)| *n1)
+            .map(|(n1, w)| (*n1, *w))
             .collect()
     }
 }

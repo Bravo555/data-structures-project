@@ -5,7 +5,7 @@ mod adj_matrix;
 mod bundle;
 mod incidence_matrix;
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 
 pub use adj_list::AdjList;
 pub use adj_matrix::AdjMatrix;
@@ -42,7 +42,7 @@ pub trait Graph {
 
     fn num_neighbours(&self, n: NodeIndex) -> usize;
 
-    fn node_neighbours(&self, n: NodeIndex) -> Vec<NodeIndex>;
+    fn node_neighbours(&self, n: NodeIndex) -> Vec<(NodeIndex, Weight)>;
 
     fn graph_connected(&self) -> bool;
 
@@ -58,15 +58,17 @@ pub trait Graph {
             let neighbours = self
                 .node_neighbours(u)
                 .into_iter()
-                .filter(|idx| !finished.contains_key(idx));
+                .filter(|(idx, _)| !finished.contains_key(idx));
 
-            for neighbour in neighbours {
-                let pos = nodes
-                    .entry(neighbour)
-                    .or_insert((u, d + self.distance(u, neighbour)));
-                if d + self.distance(u, neighbour) < pos.1 {
-                    pos.0 = u;
-                    pos.1 = d + self.distance(u, neighbour);
+            for (neighbour, weight) in neighbours {
+                if let None = nodes.get_mut(&neighbour).map(|pos| {
+                    if d + weight < pos.1 {
+                        pos.0 = u;
+                        pos.1 = d + weight;
+                    }
+                    pos
+                }) {
+                    nodes.insert(neighbour, (u, d + weight));
                 }
             }
 
