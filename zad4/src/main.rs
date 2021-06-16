@@ -21,9 +21,6 @@ fn main() {
     let step = config.next().expect("step not provided");
     let repetitions = config.next().expect("repetitions not provided");
 
-    let test_bundle = Bundle::random_connected(10, 0.5, &mut rng.clone());
-    dbg!(&test_bundle);
-
     let sizes = (start..=end).step_by(step);
     let mut results = vec![];
     for size in sizes {

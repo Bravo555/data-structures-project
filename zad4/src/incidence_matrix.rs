@@ -3,10 +3,7 @@ use rand::{
     prelude::{Distribution, SliceRandom, SmallRng},
 };
 
-use crate::Graph;
-
-type NodeIndex = crate::NodeIndex;
-type Weight = crate::Weight;
+use crate::{Graph, NodeIndex, Weight};
 
 pub struct IncidenceMatrix {
     nodes: NodeIndex,
@@ -104,12 +101,15 @@ impl Graph for IncidenceMatrix {
         let n2 = n2 as usize;
 
         for edge in self.mat.chunks_exact(self.nodes as usize) {
-            let mut connected = edge.iter().enumerate().filter(|(_, w)| **w != 0);
-            let (m1, w) = connected.next().unwrap();
-            let (m2, w) = connected.next().unwrap();
+            // let mut connected = edge.iter().enumerate().filter(|(_, w)| **w != 0);
+            // let (m1, w) = connected.next().unwrap();
+            // let (m2, w) = connected.next().unwrap();
 
-            if n1 == m1 && n2 == m2 || n1 == m2 && n2 == m1 {
-                return *w;
+            let m1 = edge[n1];
+            let m2 = edge[n2];
+
+            if m1 == m2 && m1 != 0 {
+                return m1 as Weight;
             }
         }
         return 0;
@@ -129,18 +129,14 @@ impl Graph for IncidenceMatrix {
         self.mat
             .chunks_exact(nodes)
             .filter_map(|edge| {
-                let mut connected = edge.iter().enumerate().filter(|(_, w)| **w != 0);
+                let w = edge.get(n)?;
+                let n2 = edge
+                    .iter()
+                    .enumerate()
+                    .position(|(i, w)| *w != 0 && i != n)
+                    .unwrap();
 
-                let (n1, _) = connected.next().unwrap();
-                let (n2, _) = connected.next().unwrap();
-
-                if n1 == n {
-                    Some(n2 as NodeIndex)
-                } else if n2 == n {
-                    Some(n1 as NodeIndex)
-                } else {
-                    None
-                }
+                Some(n2 as NodeIndex)
             })
             .collect::<Vec<_>>()
     }
