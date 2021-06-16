@@ -10,7 +10,7 @@ use crate::{Graph, NodeIndex, Weight};
 #[derive(Debug)]
 pub struct Bundle {
     node_indexes: Vec<usize>,
-    adjs: Vec<(NodeIndex, NodeIndex, Weight)>,
+    adjs: Vec<(NodeIndex, Weight)>,
     max_node: NodeIndex,
 }
 
@@ -66,17 +66,19 @@ impl Graph for Bundle {
         if n1 > self.max_node || n2 > self.max_node {
             panic!("node does not exist")
         }
+        let edges = self.adjs.len();
 
         if self
             .adjs
             .iter_mut()
+            .take(*self.node_indexes.get(n1 as usize + 1).unwrap_or(&edges))
             .skip(self.node_indexes[n1 as usize])
-            .find(|(u, v, _)| *u == n1 && *v == n2)
-            .map(|(_, _, w)| *w = weight)
+            .find(|(v, _)| *v == n2)
+            .map(|(_, w)| *w = weight)
             .is_none()
         {
             self.adjs
-                .insert(self.node_indexes[n1 as usize], (n1, n2, weight));
+                .insert(self.node_indexes[n1 as usize], (n2, weight));
             self.node_indexes
                 .iter_mut()
                 .skip(n1 as usize + 1)
@@ -86,13 +88,14 @@ impl Graph for Bundle {
         if self
             .adjs
             .iter_mut()
+            .take(*self.node_indexes.get(n2 as usize + 1).unwrap_or(&edges))
             .skip(self.node_indexes[n2 as usize])
-            .find(|(v, u, _)| *u == n1 && *v == n2)
-            .map(|(_, _, w)| *w = weight)
+            .find(|(u, _)| *u == n1)
+            .map(|(_, w)| *w = weight)
             .is_none()
         {
             self.adjs
-                .insert(self.node_indexes[n2 as usize], (n2, n1, weight));
+                .insert(self.node_indexes[n2 as usize], (n1, weight));
             self.node_indexes
                 .iter_mut()
                 .skip(n2 as usize + 1)
@@ -110,7 +113,7 @@ impl Graph for Bundle {
                     .unwrap_or(&self.adjs.len()),
             )
             .skip(self.node_indexes[n1 as usize])
-            .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
+            .find(|(v, _)| (*v == n2) || (*v == n1))
             .is_some()
     }
 
@@ -124,9 +127,9 @@ impl Graph for Bundle {
                     .unwrap_or(&self.adjs.len()),
             )
             .skip(self.node_indexes[n1 as usize])
-            .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
+            .find(|(v, _)| (*v == n2) || (*v == n1))
             .unwrap()
-            .2
+            .1
     }
 
     fn memory(&self) -> usize {
@@ -151,8 +154,7 @@ impl Graph for Bundle {
                     .unwrap_or(&self.adjs.len()),
             )
             .skip(self.node_indexes[n as usize])
-            .filter(|(n1, _, _)| n == *n1)
-            .map(|(_, n2, _)| *n2)
+            .map(|(n1, _)| *n1)
             .collect()
     }
 }
