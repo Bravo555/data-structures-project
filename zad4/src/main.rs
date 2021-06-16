@@ -22,7 +22,13 @@ fn main() {
     let repetitions = config.next().expect("repetitions not provided");
 
     let sizes = (start..=end).step_by(step);
-    let mut results = vec![];
+    let mut output = fs::File::create("results.csv").unwrap();
+    write!(
+        output,
+        "wielkosc instancji,macierz sasiedztwa,lista sasiedztwa,pek wyjsciowy,macierz incydencji\n",
+    )
+    .unwrap();
+
     for size in sizes {
         println!("benchmarking for size: {}", size);
 
@@ -52,27 +58,21 @@ fn main() {
         let time_bundle = Instant::elapsed(&start);
         println!("Pek wyjsciowy:\t\t{:?}", &time_bundle);
 
-        let start = Instant::now();
-        for _ in 0..repetitions {
-            let _dijkstra = inc_matrix.dijkstra(0);
-        }
-        let time_inc = Instant::elapsed(&start);
-        println!("Macierz incydencji:\t{:?}\n", &time_inc);
+        // let start = Instant::now();
+        // for _ in 0..repetitions {
+        //     let _dijkstra = inc_matrix.dijkstra(0);
+        // }
+        // let time_inc = Instant::elapsed(&start);
+        // println!("Macierz incydencji:\t{:?}\n", &time_inc);
 
-        results.push(format!(
-            "{},{},{},{}",
+        write!(
+            output,
+            "{},{},{},{}\n",
             size,
             time_matrix.as_millis(),
             time_list.as_millis(),
-            time_inc.as_millis()
-        ));
+            time_bundle.as_millis(),
+        )
+        .unwrap();
     }
-
-    let mut output = fs::File::create("results.csv").unwrap();
-    write!(
-        output,
-        "wielkosc instancji,macierz sasiedztwa,lista sasiedztwa\n{}",
-        results.join("\n")
-    )
-    .unwrap();
 }
