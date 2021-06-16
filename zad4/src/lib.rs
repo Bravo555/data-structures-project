@@ -1,7 +1,11 @@
+#![feature(map_first_last)]
+
 mod adj_list;
 mod adj_matrix;
 mod bundle;
 mod incidence_matrix;
+
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 pub use adj_list::AdjList;
 pub use adj_matrix::AdjMatrix;
@@ -13,7 +17,7 @@ type Weight = i32;
 
 pub trait Graph {
     /// Returns the amount of nodes in the graph
-    fn len(&self) -> NodeIndex;
+    fn len_nodes(&self) -> NodeIndex;
 
     /// Ensures that the node of the provided index is in the graph
     /// Depending on the implementation, it might add nodes of smaller indexes as well
@@ -43,44 +47,33 @@ pub trait Graph {
     fn graph_connected(&self) -> bool;
 
     /// Returns best paths to all the nodes from the selected start node using Dijkstra's algorithm
-    fn dijkstra(&self, start: NodeIndex) -> Vec<(NodeIndex, NodeIndex, Weight)> {
-        let mut nodes: Vec<_> = vec![(start, start, 0)];
-        let mut finished = vec![];
+    fn dijkstra(&self, start: NodeIndex) -> HashMap<NodeIndex, (NodeIndex, Weight)> {
+        let mut nodes: BTreeMap<NodeIndex, (NodeIndex, Weight)> = BTreeMap::new();
+        nodes.insert(start, (start, 0));
+        let mut finished = HashMap::new();
 
-        while nodes.len() > 0 {
-            let (i, _) = nodes
-                .iter()
-                .enumerate()
-                .min_by_key(|(_, (_, _, d))| d)
-                .unwrap();
-            let node = nodes.remove(i);
-            let (u, _, d) = node;
+        while !nodes.is_empty() {
+            let (u, (v, d)) = nodes.pop_first().unwrap();
 
             let neighbours = self
                 .node_neighbours(u)
                 .into_iter()
-                .filter(|idx| finished.iter().find(|(v, _, _)| *v == *idx).is_none());
+                .filter(|idx| !finished.contains_key(idx));
 
             for neighbour in neighbours {
-                let pos = nodes.iter().position(|(v, _, _)| *v == neighbour);
-                match pos {
-                    None => {
-                        nodes.push((neighbour, u, d + self.distance(u, neighbour)));
-                    }
-                    Some(pos) => {
-                        let n_entry = nodes.get_mut(pos).unwrap();
-                        if d + self.distance(u, neighbour) < n_entry.2 {
-                            n_entry.1 = u;
-                            n_entry.2 = d + self.distance(u, neighbour);
-                        }
-                    }
+                let pos = nodes
+                    .entry(neighbour)
+                    .or_insert((u, d + self.distance(u, neighbour)));
+                if d + self.distance(u, neighbour) < pos.1 {
+                    pos.0 = u;
+                    pos.1 = d + self.distance(u, neighbour);
                 }
             }
 
-            finished.push(node);
+            finished.insert(u, (v, d));
         }
 
-        assert_eq!(finished.len(), self.len() as usize);
+        assert_eq!(finished.len(), self.len_nodes() as usize);
         finished
     }
 }

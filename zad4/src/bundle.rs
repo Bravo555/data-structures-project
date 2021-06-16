@@ -3,6 +3,7 @@ use std::mem;
 use rand::{
     distributions::Uniform,
     prelude::{Distribution, SliceRandom, SmallRng},
+    Rng,
 };
 
 use crate::{Graph, NodeIndex, Weight};
@@ -30,7 +31,7 @@ impl Bundle {
         // first we connect all unordered pairs of the graph so that it is connected
         let mut unvisited_set = Vec::new();
 
-        for node in 0..graph.len() {
+        for node in 0..graph.len_nodes() {
             unvisited_set.push(node);
         }
         unvisited_set.shuffle(rng);
@@ -45,12 +46,24 @@ impl Bundle {
             cur_vertex = adj_vertex;
         }
 
+        let len = graph.len_nodes();
+
+        let possible_edges =
+            (0..len).flat_map(|n1| (0..len).filter(move |n2| n1 != *n2).map(move |n2| (n1, n2)));
+
+        possible_edges.for_each(|(n1, n2)| {
+            if rng.gen_bool(edge_probability as f64) {
+                let weight = weight_dist.sample(rng);
+                graph.connect(n1, n2, weight);
+            }
+        });
+
         graph
     }
 }
 
 impl Graph for Bundle {
-    fn len(&self) -> NodeIndex {
+    fn len_nodes(&self) -> NodeIndex {
         self.max_node + 1
     }
 

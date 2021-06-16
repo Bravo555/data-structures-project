@@ -1,6 +1,7 @@
 use rand::{
     distributions::Uniform,
     prelude::{Distribution, SliceRandom, SmallRng},
+    Rng,
 };
 
 use crate::{Graph, NodeIndex, Weight};
@@ -27,7 +28,7 @@ impl IncidenceMatrix {
         // first we connect all unordered pairs of the graph so that it is connected
         let mut unvisited_set = Vec::new();
 
-        for node in 0..graph.len() {
+        for node in 0..graph.len_nodes() {
             unvisited_set.push(node);
         }
         unvisited_set.shuffle(rng);
@@ -42,12 +43,24 @@ impl IncidenceMatrix {
             cur_vertex = adj_vertex;
         }
 
+        let len = graph.len_nodes();
+
+        let possible_edges =
+            (0..len).flat_map(|n1| (0..len).filter(move |n2| n1 != *n2).map(move |n2| (n1, n2)));
+
+        possible_edges.for_each(|(n1, n2)| {
+            if rng.gen_bool(edge_probability as f64) {
+                let weight = weight_dist.sample(rng);
+                graph.connect(n1, n2, weight);
+            }
+        });
+
         graph
     }
 }
 
 impl Graph for IncidenceMatrix {
-    fn len(&self) -> crate::NodeIndex {
+    fn len_nodes(&self) -> crate::NodeIndex {
         self.nodes
     }
 
@@ -69,17 +82,22 @@ impl Graph for IncidenceMatrix {
         let n2 = n2 as usize;
 
         let mut found = false;
-        let mat = self.mat.chunks_exact_mut(self.nodes as usize).map(|edge| {
-            let mut connected_nodes = edge.iter_mut().enumerate().filter(|(_, w)| **w != 0);
-            let (m1, w1) = connected_nodes.next().unwrap();
-            let (m2, w2) = connected_nodes.next().unwrap();
+        self.mat
+            .chunks_exact_mut(self.nodes as usize)
+            .for_each(|edge| {
+                // let mut connected_nodes = edge.iter_mut().enumerate().filter(|(_, w)| **w != 0);
+                // let (m1, w1) = connected_nodes.next().unwrap();
+                // let (m2, w2) = connected_nodes.next().unwrap();
 
-            if (n1 == m1 && n2 == m2) || (n1 == m2 && n2 == m1) {
-                *w1 = weight;
-                *w2 = weight;
-                found = true;
-            }
-        });
+                let w1 = edge[n1];
+                let w2 = edge[n2];
+
+                if w1 == w2 && w1 != 0 {
+                    edge[n1] = weight;
+                    edge[n2] = weight;
+                    found = true;
+                }
+            });
 
         if !found {
             let mut new_edge = vec![0 as Weight; self.nodes as usize];
@@ -88,11 +106,9 @@ impl Graph for IncidenceMatrix {
             self.mat.extend_from_slice(&new_edge);
             self.edges += 1;
         }
-
-        assert_eq!(self.distance(n1 as NodeIndex, n2 as NodeIndex), weight);
     }
 
-    fn nodes_connected(&self, n1: crate::NodeIndex, n2: crate::NodeIndex) -> bool {
+    fn nodes_connected(&self, _: crate::NodeIndex, _: crate::NodeIndex) -> bool {
         todo!()
     }
 

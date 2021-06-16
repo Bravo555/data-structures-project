@@ -30,13 +30,13 @@ fn main() {
     .unwrap();
 
     for size in sizes {
+        println!("Generating graphs...\n");
+        let adj_matrix = AdjMatrix::random_connected(size, 0.2, &mut rng.clone());
+        let list = AdjList::random_connected(size, 0.2, &mut rng.clone());
+        // let inc_matrix = IncidenceMatrix::random_connected(size, 0.2, &mut rng.clone());
+        let bundle = Bundle::random_connected(size, 0.2, &mut rng.clone());
+
         println!("benchmarking for size: {}", size);
-
-        let adj_matrix = AdjMatrix::random_connected(size, 0.5, &mut rng.clone());
-        let list = AdjList::random_connected(size, 0.5, &mut rng.clone());
-        let inc_matrix = IncidenceMatrix::random_connected(size, 0.5, &mut rng.clone());
-        let bundle = Bundle::random_connected(size, 0.5, &mut rng.clone());
-
         let start = Instant::now();
         for _ in 0..repetitions {
             let _dijkstra = adj_matrix.dijkstra(0);
@@ -65,9 +65,9 @@ fn main() {
         // let time_inc = Instant::elapsed(&start);
         // println!("Macierz incydencji:\t{:?}\n", &time_inc);
 
-        write!(
+        writeln!(
             output,
-            "{},{},{},{}\n",
+            "{},{},{},{}",
             size,
             time_matrix.as_millis(),
             time_list.as_millis(),
