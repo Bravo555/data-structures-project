@@ -1,50 +1,81 @@
-use rand::thread_rng;
+use std::{fs, io::Write, time::Instant};
+
+use rand::{prelude::SmallRng, SeedableRng};
 use zad4::*;
 
 fn main() {
-    let mut rng = thread_rng();
+    let rng = SmallRng::seed_from_u64(0);
 
-    let mut matrix = AdjMatrix::new();
-    let mut list = AdjList::new();
+    let config_str = fs::read_to_string("config.ini").expect("nie podano pliku konfiguracyjnego");
+    let config = config_str
+        .lines()
+        .filter(|line| !line.starts_with(";"))
+        .next()
+        .expect("start not provided");
+    let mut config = config
+        .split_whitespace()
+        .filter_map(|word| word.parse().ok());
 
-    let random_graph = AdjMatrix::random_connected(20, 0.5, &mut rng);
+    let start = config.next().expect("start not provided");
+    let end = config.next().expect("end not provided");
+    let step = config.next().expect("step not provided");
+    let repetitions = config.next().expect("repetitions not provided");
 
-    matrix.add_node(1);
-    matrix.add_node(2);
-    matrix.add_node(3);
-    matrix.add_node(4);
-    matrix.add_node(5);
+    let test_bundle = Bundle::random_connected(10, 0.5, &mut rng.clone());
+    dbg!(&test_bundle);
 
-    list.add_node(1);
-    list.add_node(2);
-    list.add_node(3);
-    list.add_node(4);
-    list.add_node(5);
+    let sizes = (start..=end).step_by(step);
+    let mut results = vec![];
+    for size in sizes {
+        println!("benchmarking for size: {}", size);
 
-    matrix.connect(0, 1, 4);
-    matrix.connect(1, 2, 3);
-    matrix.connect(2, 3, 9);
-    matrix.connect(2, 4, 5);
-    matrix.connect(3, 4, 1);
-    matrix.connect(3, 5, 2);
-    matrix.connect(4, 5, 6);
+        let adj_matrix = AdjMatrix::random_connected(size, 0.5, &mut rng.clone());
+        let list = AdjList::random_connected(size, 0.5, &mut rng.clone());
+        let inc_matrix = IncidenceMatrix::random_connected(size, 0.5, &mut rng.clone());
+        let bundle = Bundle::random_connected(size, 0.5, &mut rng.clone());
 
-    list.connect(0, 1, 4);
-    list.connect(1, 2, 3);
-    list.connect(2, 3, 9);
-    list.connect(2, 4, 5);
-    list.connect(3, 4, 1);
-    list.connect(3, 5, 2);
-    list.connect(4, 5, 6);
+        let start = Instant::now();
+        for _ in 0..repetitions {
+            let _dijkstra = adj_matrix.dijkstra(0);
+        }
+        let time_matrix = Instant::elapsed(&start);
+        println!("Macierz sasiedztwa:\t{:?}", &time_matrix);
 
-    assert_eq!(matrix.dijkstra(0), list.dijkstra(0));
+        let start = Instant::now();
+        for _ in 0..repetitions {
+            let _dijkstra = list.dijkstra(0);
+        }
+        let time_list = Instant::elapsed(&start);
+        println!("Lista sasiedztwa:\t{:?}", &time_list);
 
-    dbg!(matrix.dijkstra(0));
-    dbg!(list.dijkstra(0));
+        let start = Instant::now();
+        for _ in 0..repetitions {
+            let _dijkstra = bundle.dijkstra(0);
+        }
+        let time_bundle = Instant::elapsed(&start);
+        println!("Pek wyjsciowy:\t\t{:?}", &time_bundle);
 
-    dbg!(matrix.memory());
-    dbg!(list.memory());
+        let start = Instant::now();
+        for _ in 0..repetitions {
+            let _dijkstra = inc_matrix.dijkstra(0);
+        }
+        let time_inc = Instant::elapsed(&start);
+        println!("Macierz incydencji:\t{:?}\n", &time_inc);
 
-    println!("{:?}", &random_graph);
-    dbg!(random_graph.memory());
+        results.push(format!(
+            "{},{},{},{}",
+            size,
+            time_matrix.as_millis(),
+            time_list.as_millis(),
+            time_inc.as_millis()
+        ));
+    }
+
+    let mut output = fs::File::create("results.csv").unwrap();
+    write!(
+        output,
+        "wielkosc instancji,macierz sasiedztwa,lista sasiedztwa\n{}",
+        results.join("\n")
+    )
+    .unwrap();
 }

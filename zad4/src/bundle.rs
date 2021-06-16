@@ -5,22 +5,21 @@ use rand::{
     prelude::{Distribution, SliceRandom, SmallRng},
 };
 
-use crate::Graph;
-
-type NodeIndex = crate::NodeIndex;
-type Weight = crate::Weight;
+use crate::{Graph, NodeIndex, Weight};
 
 #[derive(Debug)]
-pub struct AdjList {
-    max_node: NodeIndex,
+pub struct Bundle {
+    node_indexes: Vec<usize>,
     adjs: Vec<(NodeIndex, NodeIndex, Weight)>,
+    max_node: NodeIndex,
 }
 
-impl AdjList {
+impl Bundle {
     pub fn new() -> Self {
-        AdjList {
+        Bundle {
             max_node: 0,
             adjs: Vec::new(),
+            node_indexes: Vec::new(),
         }
     }
 
@@ -50,7 +49,7 @@ impl AdjList {
     }
 }
 
-impl Graph for AdjList {
+impl Graph for Bundle {
     fn len(&self) -> NodeIndex {
         self.max_node + 1
     }
@@ -58,6 +57,8 @@ impl Graph for AdjList {
     fn add_node(&mut self, node: NodeIndex) {
         if node > self.max_node {
             self.max_node = node;
+            self.node_indexes
+                .resize((node + 1) as usize, self.adjs.len());
         }
     }
 
@@ -69,27 +70,40 @@ impl Graph for AdjList {
         if self
             .adjs
             .iter_mut()
+            .skip(self.node_indexes[n1 as usize])
             .find(|(u, v, _)| *u == n1 && *v == n2)
             .map(|(_, _, w)| *w = weight)
             .is_none()
         {
-            self.adjs.push((n1, n2, weight));
+            self.adjs
+                .insert(self.node_indexes[n1 as usize], (n1, n2, weight));
+            self.node_indexes
+                .iter_mut()
+                .skip(n1 as usize + 1)
+                .for_each(|i| *i += 1);
         }
 
         if self
             .adjs
             .iter_mut()
+            .skip(self.node_indexes[n2 as usize])
             .find(|(v, u, _)| *u == n1 && *v == n2)
             .map(|(_, _, w)| *w = weight)
             .is_none()
         {
-            self.adjs.push((n2, n1, weight));
+            self.adjs
+                .insert(self.node_indexes[n2 as usize], (n2, n1, weight));
+            self.node_indexes
+                .iter_mut()
+                .skip(n2 as usize + 1)
+                .for_each(|i| *i += 1);
         }
     }
 
     fn nodes_connected(&self, n1: NodeIndex, n2: NodeIndex) -> bool {
         self.adjs
             .iter()
+            .skip(self.node_indexes[n1 as usize])
             .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
             .is_some()
     }
@@ -97,6 +111,7 @@ impl Graph for AdjList {
     fn distance(&self, n1: NodeIndex, n2: NodeIndex) -> i32 {
         self.adjs
             .iter()
+            .skip(self.node_indexes[n1 as usize])
             .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
             .unwrap()
             .2
@@ -117,6 +132,7 @@ impl Graph for AdjList {
     fn node_neighbours(&self, n: NodeIndex) -> Vec<NodeIndex> {
         self.adjs
             .iter()
+            .skip(self.node_indexes[n as usize])
             .filter(|(n1, _, _)| n == *n1)
             .map(|(_, n2, _)| *n2)
             .collect()

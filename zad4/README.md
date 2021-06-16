@@ -42,6 +42,8 @@ Macierz sąsiedztwa.
 > Która jest najtrudniejsza w implementacji ze względu na możliwość popełnienia błędów oraz liczbę możliwych miejsc, w
 > których błędy można popełnić?
 
+Macierze bo trzeba bylo updateowac indeksy po dodawaniu nowych wierzcholkow i resizie.
+
 TODO/pęk?
 
 > Która z reprezentacji jest najefektywniejsza pamięciowo, pamięciowo-czasowo i czasowo (w badanym zastosowaniu)?

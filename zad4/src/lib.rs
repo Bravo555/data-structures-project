@@ -1,8 +1,12 @@
 mod adj_list;
 mod adj_matrix;
+mod bundle;
+mod incidence_matrix;
 
 pub use adj_list::AdjList;
 pub use adj_matrix::AdjMatrix;
+pub use bundle::Bundle;
+pub use incidence_matrix::IncidenceMatrix;
 
 type NodeIndex = u32;
 type Weight = i32;
@@ -20,7 +24,7 @@ pub trait Graph {
     fn connect(&mut self, n1: NodeIndex, n2: NodeIndex, weight: i32);
 
     /// Checks if there is a connection from `n1` to `n2`
-    fn connected(&self, n1: NodeIndex, n2: NodeIndex) -> bool;
+    fn nodes_connected(&self, n1: NodeIndex, n2: NodeIndex) -> bool;
 
     /// Returns a weight of a connection from `n1` to `n2` if it exists
     /// If it doesn't exist, the function panics.
@@ -33,6 +37,10 @@ pub trait Graph {
     fn memory(&self) -> usize;
 
     fn num_neighbours(&self, n: NodeIndex) -> usize;
+
+    fn node_neighbours(&self, n: NodeIndex) -> Vec<NodeIndex>;
+
+    fn graph_connected(&self) -> bool;
 
     /// Returns best paths to all the nodes from the selected start node using Dijkstra's algorithm
     fn dijkstra(&self, start: NodeIndex) -> Vec<(NodeIndex, NodeIndex, Weight)> {
@@ -48,12 +56,12 @@ pub trait Graph {
             let node = nodes.remove(i);
             let (u, _, d) = node;
 
-            let neighbours = (0..self.len()).filter(|idx| {
-                self.connected(u, *idx) && finished.iter().find(|(v, _, _)| *v == *idx).is_none()
-            });
+            let neighbours = self
+                .node_neighbours(u)
+                .into_iter()
+                .filter(|idx| finished.iter().find(|(v, _, _)| *v == *idx).is_none());
 
             for neighbour in neighbours {
-                // TODO: looking for a value 2 times, fix
                 let pos = nodes.iter().position(|(v, _, _)| *v == neighbour);
                 match pos {
                     None => {
@@ -72,6 +80,7 @@ pub trait Graph {
             finished.push(node);
         }
 
+        assert_eq!(finished.len(), self.len() as usize);
         finished
     }
 }
