@@ -103,6 +103,12 @@ impl Graph for Bundle {
     fn nodes_connected(&self, n1: NodeIndex, n2: NodeIndex) -> bool {
         self.adjs
             .iter()
+            .take(
+                *self
+                    .node_indexes
+                    .get(n1 as usize + 1)
+                    .unwrap_or(&self.adjs.len()),
+            )
             .skip(self.node_indexes[n1 as usize])
             .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
             .is_some()
@@ -111,6 +117,12 @@ impl Graph for Bundle {
     fn distance(&self, n1: NodeIndex, n2: NodeIndex) -> i32 {
         self.adjs
             .iter()
+            .take(
+                *self
+                    .node_indexes
+                    .get(n1 as usize + 1)
+                    .unwrap_or(&self.adjs.len()),
+            )
             .skip(self.node_indexes[n1 as usize])
             .find(|(u, v, _)| (*u == n1 && *v == n2) || (*u == n2 && *v == n1))
             .unwrap()
@@ -132,6 +144,12 @@ impl Graph for Bundle {
     fn node_neighbours(&self, n: NodeIndex) -> Vec<NodeIndex> {
         self.adjs
             .iter()
+            .take(
+                *self
+                    .node_indexes
+                    .get(n as usize + 1)
+                    .unwrap_or(&self.adjs.len()),
+            )
             .skip(self.node_indexes[n as usize])
             .filter(|(n1, _, _)| n == *n1)
             .map(|(_, n2, _)| *n2)
